@@ -1,5 +1,5 @@
-import Chat from "../components/Chat";
+import ModernChat from "@/components/modern-chat";
 
 export default function Home() {
-  return <Chat />;
+  return <ModernChat />;
 }
