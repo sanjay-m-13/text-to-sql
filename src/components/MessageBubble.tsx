@@ -55,8 +55,8 @@ export default function MessageBubble({ message, index }: MessageBubbleProps) {
 
   // Parse tool results from message
   const toolResults =
-    message.toolInvocations
-      ?.map((invocation) => {
+    (message.toolInvocations || (message as any).toolCalls)
+      ?.map((invocation: any) => {
         if (
           invocation.toolName === "executeQuery" &&
           "result" in invocation &&
@@ -77,6 +77,15 @@ export default function MessageBubble({ message, index }: MessageBubbleProps) {
       .filter(
         (result): result is NonNullable<typeof result> => result !== null
       ) || [];
+
+  // Debug logging - remove this after debugging
+  console.log("Message:", message);
+  console.log("Tool Invocations:", message.toolInvocations);
+  console.log("Tool Calls:", (message as any).toolCalls);
+  if (toolResults.length > 0) {
+    console.log("Tool Results:", toolResults);
+    console.log("First result data:", toolResults[0]?.data);
+  }
 
   return (
     <div
