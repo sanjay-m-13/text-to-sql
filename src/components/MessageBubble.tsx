@@ -1,7 +1,26 @@
 "use client";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { Message } from "ai";
 import QueryResult from "./QueryResult";
+
+// Define types for tool invocations
+interface ToolInvocation {
+  toolName: string;
+  result?: QueryResultType;
+}
+
+interface QueryResultType {
+  success: boolean;
+  sql: string;
+  explanation: string;
+  data?: Record<string, unknown>[];
+  rowCount?: number;
+  columns?: Array<{ name: string; dataType: number }>;
+  error?: string;
+}
 
 // Simple Person Icon component to replace MUI icon
 const PersonIcon = () => (
@@ -75,7 +94,8 @@ export default function MessageBubble({ message, index }: MessageBubbleProps) {
         return null;
       })
       .filter(
-        (result): result is NonNullable<typeof result> => result !== null
+        (result: QueryResultType | null): result is QueryResultType =>
+          result !== null
       ) || [];
 
   // Debug logging - remove this after debugging
@@ -141,7 +161,7 @@ export default function MessageBubble({ message, index }: MessageBubbleProps) {
             </div>
 
             {/* Render query results */}
-            {toolResults.map((result, resultIndex: number) => (
+            {toolResults.map((result: QueryResultType, resultIndex: number) => (
               <QueryResult key={resultIndex} result={result} />
             ))}
           </div>

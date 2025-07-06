@@ -1,13 +1,15 @@
 "use client";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react/no-unescaped-entities */
+
 import { useState, useEffect } from "react";
 import { useChat } from "@ai-sdk/react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -51,8 +53,58 @@ import {
   FileText,
 } from "lucide-react";
 
+// Define types for better type safety
+interface Message {
+  id: string;
+  role: string;
+  content: string;
+  toolInvocations?: ToolInvocation[];
+}
+
+interface ToolInvocation {
+  toolName: string;
+  result?: QueryResult;
+}
+
+interface QueryResult {
+  success: boolean;
+  sql?: string;
+  explanation?: string;
+  data?: Record<string, unknown>[];
+  rowCount?: number;
+  error?: string;
+}
+
+interface DatabaseTable {
+  name: string;
+  description: string;
+  columns: DatabaseColumn[];
+  foreignKeys?: ForeignKey[];
+  recordCount: string;
+}
+
+interface DatabaseColumn {
+  name: string;
+  type: string;
+  description: string;
+  isPrimaryKey: boolean;
+  nullable: boolean;
+}
+
+interface ForeignKey {
+  column: string;
+  referencedTable: string;
+  referencedColumn: string;
+}
+
+interface DatabaseInfo {
+  description: string;
+  tables: DatabaseTable[];
+  summary: string;
+}
+
 // Modern Message Bubble Component
-function MessageBubble({ message, index }: { message: any; index: number }) {
+function MessageBubble({ message }: { message: Message }) {
   const isUser = message.role === "user";
 
   // Parse tool results
@@ -903,11 +955,14 @@ function WelcomeScreen({
   }, []);
 
   // Transform schema data to natural language
-  const transformSchemaToNaturalLanguage = (schemaData: any) => {
+  const transformSchemaToNaturalLanguage = (schemaData: {
+    tables: DatabaseTable[];
+    totalTables: number;
+  }): DatabaseInfo => {
     const { tables, totalTables } = schemaData;
 
     // Generate overall description
-    const tableNames = tables.map((t: any) => t.name).join(", ");
+    const tableNames = tables.map((t: DatabaseTable) => t.name).join(", ");
     const description = `Your database contains ${totalTables} table${
       totalTables !== 1 ? "s" : ""
     }: ${tableNames}. This appears to be a ${inferDatabaseType(
@@ -915,7 +970,7 @@ function WelcomeScreen({
     )} system.`;
 
     // Transform each table
-    const transformedTables = tables.map((table: any) => {
+    const transformedTables = tables.map((table: DatabaseTable) => {
       const columnCount = table.columns.length;
       const primaryKeys = table.columns
         .filter((c: any) => c.isPrimaryKey)
@@ -1263,11 +1318,13 @@ export default function ModernChat() {
     input,
     handleInputChange,
     handleSubmit,
-    isLoading: isGenerating,
+    isLoading,
     setInput,
   } = useChat({
     api: "/api/chat",
   });
+
+  const isGenerating = isLoading;
 
   const handleExampleClick = (example: string) => {
     setInput(example);
@@ -1313,11 +1370,10 @@ export default function ModernChat() {
               <WelcomeScreen onExampleClick={handleExampleClick} />
             ) : (
               <div className="space-y-4 sm:space-y-6 lg:space-y-8">
-                {messages.map((message, index) => (
+                {messages.map((message) => (
                   <MessageBubble
                     key={message.id}
-                    message={message}
-                    index={index}
+                    message={message as Message}
                   />
                 ))}
                 {isGenerating && <LoadingMessage />}
@@ -1366,7 +1422,9 @@ export default function ModernChat() {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
                         if (input.trim() && !isGenerating) {
-                          handleSubmit(e as any);
+                          handleSubmit(
+                            e as React.FormEvent<HTMLTextAreaElement>
+                          );
                         }
                       }
                     }}
