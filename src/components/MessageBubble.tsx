@@ -1,8 +1,5 @@
 "use client";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import { Message } from "ai";
 import QueryResultCard from "./QueryResultCard";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -54,11 +51,11 @@ export default function MessageBubble({ message }: { message: Message }) {
     <div
       className={`flex gap-3 sm:gap-4 ${
         isUser ? "justify-end" : "justify-start"
-      } animate-in slide-in-from-bottom-2 duration-500 hover:scale-[1.02] transition-all`}
+      } mb-4`}
     >
       {!isUser && (
-        <Avatar className="w-8 h-8 sm:w-10 sm:h-10 border-2 border-white/40 shadow-2xl flex-shrink-0 ring-2 ring-white/20 backdrop-blur-md animate-pulse hover:animate-spin transition-all duration-300">
-          <AvatarFallback className="bg-gradient-to-br from-white/20 to-gray-300/30 text-white backdrop-blur-md">
+        <Avatar className="w-8 h-8 sm:w-10 sm:h-10 border border-gray-200 shadow-sm flex-shrink-0">
+          <AvatarFallback className="bg-blue-600 text-white">
             <Bot className="w-4 h-4 sm:w-5 sm:h-5" />
           </AvatarFallback>
         </Avatar>
@@ -72,20 +69,20 @@ export default function MessageBubble({ message }: { message: Message }) {
         <Card
           className={`${
             isUser
-              ? "bg-gradient-to-r from-white/25 via-gray-200/20 to-white/15 text-white shadow-2xl border border-white/30 backdrop-blur-md animate-pulse"
-              : "bg-white/8 backdrop-blur-xl shadow-2xl border border-white/15 text-white hover:bg-white/12"
-          } overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-white/20 hover:scale-[1.02] hover:border-white/40`}
+              ? "bg-blue-600 text-white shadow-md border border-blue-700"
+              : "bg-white shadow-md border border-gray-200 hover:shadow-lg"
+          } overflow-hidden transition-shadow duration-200`}
         >
           <div className="p-4 sm:p-6">
             <div className="flex items-center gap-2 mb-3">
               {isUser ? (
-                <User className="w-3 h-3 sm:w-4 sm:h-4 text-white/90 animate-pulse" />
+                <User className="w-4 h-4 text-white" />
               ) : (
-                <Bot className="w-3 h-3 sm:w-4 sm:h-4 text-white/90 animate-bounce" />
+                <Bot className="w-4 h-4 text-blue-600" />
               )}
               <span
-                className={`text-xs sm:text-sm font-semibold ${
-                  isUser ? "text-white/90" : "text-white/90"
+                className={`text-sm font-semibold ${
+                  isUser ? "text-white" : "text-gray-900"
                 }`}
               >
                 {isUser ? "You" : "SQL Assistant"}
@@ -93,8 +90,8 @@ export default function MessageBubble({ message }: { message: Message }) {
 
               {/* Timestamp */}
               <span
-                className={`text-xs opacity-60 ml-auto ${
-                  isUser ? "text-white/60" : "text-white/60"
+                className={`text-xs ml-auto ${
+                  isUser ? "text-blue-100" : "text-gray-500"
                 }`}
               >
                 {new Date().toLocaleTimeString([], {
@@ -106,7 +103,7 @@ export default function MessageBubble({ message }: { message: Message }) {
 
             <div
               className={`text-sm sm:text-base leading-relaxed whitespace-pre-wrap ${
-                isUser ? "text-white" : "text-white/90"
+                isUser ? "text-white" : "text-gray-800"
               }`}
             >
               {message.content}
@@ -121,8 +118,8 @@ export default function MessageBubble({ message }: { message: Message }) {
       </div>
 
       {isUser && (
-        <Avatar className="w-8 h-8 sm:w-10 sm:h-10 border-2 border-white/40 shadow-2xl flex-shrink-0 ring-2 ring-white/20 backdrop-blur-md">
-          <AvatarFallback className="bg-gradient-to-br from-white/25 via-gray-200/20 to-white/15 text-white backdrop-blur-md">
+        <Avatar className="w-8 h-8 sm:w-10 sm:h-10 border border-gray-200 shadow-sm flex-shrink-0">
+          <AvatarFallback className="bg-gray-600 text-white">
             <User className="w-4 h-4 sm:w-5 sm:h-5" />
           </AvatarFallback>
         </Avatar>

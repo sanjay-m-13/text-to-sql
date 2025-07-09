@@ -1,7 +1,5 @@
 "use client";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,18 +19,7 @@ import {
   BarChart3,
   FileText,
 } from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
+import { DynamicChart } from "./DynamicChart";
 
 interface QueryResult {
   success: boolean;
@@ -43,8 +30,52 @@ interface QueryResult {
   error?: string;
 }
 
-// Enhanced Query Result Component with Dynamic Views and Monochrome Styling
+// Enhanced Query Result Component with Classic UI and DynamicChart
 export default function QueryResultCard({ result }: { result: QueryResult }) {
+  // Transform data for DynamicChart component
+  const transformDataForChart = (data: Record<string, unknown>[]) => {
+    if (!data || data.length === 0) return { chartData: [], chartConfig: null };
+
+    // Find the best numerical field for charting
+    const firstRow = data[0];
+    const numericalField = Object.keys(firstRow).find(
+      (key) =>
+        (key.includes("amount") ||
+          key.includes("total") ||
+          key.includes("sum") ||
+          key.includes("count") ||
+          key.includes("price")) &&
+        !isNaN(parseFloat(String(firstRow[key])))
+    );
+
+    if (!numericalField) return { chartData: [], chartConfig: null };
+
+    const nameField =
+      Object.keys(firstRow).find(
+        (key) =>
+          key.includes("name") ||
+          key.includes("customer") ||
+          key.includes("title")
+      ) || Object.keys(firstRow)[0];
+
+    const chartData = data.map((row) => ({
+      [nameField]: String(row[nameField] || "Unknown"),
+      [numericalField]: parseFloat(String(row[numericalField] || 0)),
+    }));
+
+    const chartConfig = {
+      type: "bar" as const,
+      title: `${numericalField.replace(/_/g, " ").toUpperCase()} Analysis`,
+      description: `Analysis of ${numericalField} by ${nameField}`,
+      takeaway: `This chart shows the distribution of ${numericalField} across different ${nameField} values.`,
+      xKey: nameField,
+      yKeys: [numericalField],
+      legend: false,
+    };
+
+    return { chartData, chartConfig };
+  };
+
   // Determine if query should show charts and summary based on content
   const shouldShowChartsAndSummary = (result: QueryResult) => {
     if (!result.success || !result.data || result.data.length === 0) {
@@ -90,37 +121,11 @@ export default function QueryResultCard({ result }: { result: QueryResult }) {
 
   const showCharts = shouldShowChartsAndSummary(result);
 
-  // Generate chart data from the result
-  const generateChartData = (data: Record<string, unknown>[]) => {
-    if (!data || data.length === 0) return [];
-
-    // Find the best numerical field for charting
-    const firstRow = data[0];
-    const numericalField = Object.keys(firstRow).find(
-      (key) =>
-        (key.includes("amount") ||
-          key.includes("total") ||
-          key.includes("sum") ||
-          key.includes("count") ||
-          key.includes("price")) &&
-        !isNaN(parseFloat(String(firstRow[key])))
-    );
-
-    if (!numericalField) return [];
-
-    return data.map((row, index) => ({
-      name: String(
-        row.name || row.customer_name || row.title || `Item ${index + 1}`
-      ),
-      value: parseFloat(String(row[numericalField] || 0)),
-      [numericalField]: parseFloat(String(row[numericalField] || 0)),
-      id: row.id || index,
-      ...row,
-    }));
-  };
-
-  const chartData =
-    showCharts && result.data ? generateChartData(result.data) : [];
+  // Get data for DynamicChart component
+  const { chartData: dynamicChartData, chartConfig } =
+    showCharts && result.data
+      ? transformDataForChart(result.data)
+      : { chartData: [], chartConfig: null };
 
   // Generate summary statistics and natural language description
   const generateSummary = (data: Record<string, unknown>[]) => {
@@ -199,20 +204,18 @@ export default function QueryResultCard({ result }: { result: QueryResult }) {
   const summary =
     showCharts && result.data ? generateSummary(result.data) : null;
 
-  const COLORS = ["#ffffff", "#e5e7eb", "#9ca3af", "#6b7280", "#4b5563"];
-
   return (
-    <Card className="mt-3 bg-white/8 backdrop-blur-xl border border-white/15 w-full shadow-2xl hover:shadow-white/20 hover:bg-white/12 hover:border-white/25 transition-all duration-500 hover:scale-[1.01] animate-pulse hover:animate-none">
-      <div className="p-4 sm:p-6">
-        {/* Enhanced Status Header */}
+    <Card className="mt-4 bg-white border border-gray-200 w-full shadow-md hover:shadow-lg transition-shadow duration-200">
+      <div className="p-6">
+        {/* Status Header */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4">
           <div className="flex items-center gap-2">
             {result.success ? (
-              <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white/80 animate-pulse" />
+              <CheckCircle className="w-5 h-5 text-green-600" />
             ) : (
-              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white/80 animate-bounce" />
+              <AlertCircle className="w-5 h-5 text-red-600" />
             )}
-            <span className="font-medium text-sm sm:text-base text-white/90">
+            <span className="font-medium text-base text-gray-900">
               {result.success ? "Query Executed Successfully" : "Query Failed"}
             </span>
           </div>
@@ -220,7 +223,7 @@ export default function QueryResultCard({ result }: { result: QueryResult }) {
           {result.success && result.rowCount !== undefined && (
             <Badge
               variant="secondary"
-              className="bg-white/10 text-white/80 border-white/20 text-xs"
+              className="bg-blue-100 text-blue-800 border-blue-200 text-xs"
             >
               {result.rowCount} row{result.rowCount !== 1 ? "s" : ""} affected
             </Badge>
@@ -230,11 +233,11 @@ export default function QueryResultCard({ result }: { result: QueryResult }) {
         {/* SQL Query Display */}
         {result.sql && (
           <div className="mb-4">
-            <h4 className="text-sm font-medium text-white/80 mb-2">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">
               Generated SQL:
             </h4>
-            <div className="bg-white/5 backdrop-blur-sm rounded-lg p-3 border border-white/10">
-              <code className="text-xs sm:text-sm text-white/90 font-mono break-all">
+            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+              <code className="text-sm text-gray-800 font-mono break-all">
                 {result.sql}
               </code>
             </div>
@@ -244,10 +247,10 @@ export default function QueryResultCard({ result }: { result: QueryResult }) {
         {/* Explanation */}
         {result.explanation && (
           <div className="mb-4">
-            <h4 className="text-sm font-medium text-white/80 mb-2">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">
               Explanation:
             </h4>
-            <p className="text-sm text-white/70 leading-relaxed">
+            <p className="text-sm text-gray-600 leading-relaxed">
               {result.explanation}
             </p>
           </div>
@@ -256,29 +259,29 @@ export default function QueryResultCard({ result }: { result: QueryResult }) {
         {/* Error Display */}
         {!result.success && result.error && (
           <div className="mb-4">
-            <h4 className="text-sm font-medium text-red-300 mb-2">Error:</h4>
-            <div className="bg-red-500/10 backdrop-blur-sm rounded-lg p-3 border border-red-400/20">
-              <code className="text-xs sm:text-sm text-red-200 font-mono break-all">
+            <h4 className="text-sm font-medium text-red-700 mb-2">Error:</h4>
+            <div className="bg-red-50 rounded-lg p-3 border border-red-200">
+              <code className="text-sm text-red-800 font-mono break-all">
                 {result.error}
               </code>
             </div>
           </div>
         )}
 
-        {/* Enhanced Data Display with Dynamic Views */}
+        {/* Data Display with Classic Tabs */}
         {result.success && result.data && result.data.length > 0 && (
           <div className="mt-4">
             <Tabs defaultValue="table" className="w-full">
               <TabsList
                 className={`grid w-full ${
                   showCharts ? "grid-cols-3" : "grid-cols-1"
-                } bg-white/10 backdrop-blur-sm rounded-xl p-1`}
+                } bg-gray-100 rounded-lg p-1`}
               >
                 <TabsTrigger
                   value="table"
-                  className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm data-[state=active]:bg-white/20 data-[state=active]:shadow-sm rounded-lg transition-all duration-200 text-white/80"
+                  className="flex items-center gap-2 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md transition-all duration-200 text-gray-700"
                 >
-                  <TableIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <TableIcon className="w-4 h-4" />
                   <span className="hidden sm:inline">Table</span>
                   <span className="sm:hidden">📊</span>
                 </TabsTrigger>
@@ -286,17 +289,17 @@ export default function QueryResultCard({ result }: { result: QueryResult }) {
                   <>
                     <TabsTrigger
                       value="chart"
-                      className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm data-[state=active]:bg-white/20 data-[state=active]:shadow-sm rounded-lg transition-all duration-200 text-white/80"
+                      className="flex items-center gap-2 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md transition-all duration-200 text-gray-700"
                     >
-                      <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <BarChart3 className="w-4 h-4" />
                       <span className="hidden sm:inline">Chart</span>
                       <span className="sm:hidden">📈</span>
                     </TabsTrigger>
                     <TabsTrigger
                       value="summary"
-                      className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm data-[state=active]:bg-white/20 data-[state=active]:shadow-sm rounded-lg transition-all duration-200 text-white/80"
+                      className="flex items-center gap-2 text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md transition-all duration-200 text-gray-700"
                     >
-                      <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <FileText className="w-4 h-4" />
                       <span className="hidden sm:inline">Summary</span>
                       <span className="sm:hidden">📋</span>
                     </TabsTrigger>
@@ -304,17 +307,17 @@ export default function QueryResultCard({ result }: { result: QueryResult }) {
                 )}
               </TabsList>
 
-              {/* Enhanced Table View */}
+              {/* Table View */}
               <TabsContent value="table" className="mt-4">
-                <div className="border border-white/15 rounded-xl overflow-hidden bg-white/5 backdrop-blur-sm">
-                  <ScrollArea className="h-64 sm:h-80 lg:h-96">
+                <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                  <ScrollArea className="h-96">
                     <Table>
-                      <TableHeader className="bg-white/10 backdrop-blur-sm sticky top-0">
+                      <TableHeader className="bg-gray-50 sticky top-0">
                         <TableRow>
                           {Object.keys(result.data[0]).map((column: string) => (
                             <TableHead
                               key={column}
-                              className="text-xs sm:text-sm font-semibold text-white/80 px-2 sm:px-4 py-2 sm:py-3"
+                              className="text-sm font-semibold text-gray-700 px-4 py-3"
                             >
                               {column.replace(/_/g, " ").toUpperCase()}
                             </TableHead>
@@ -326,16 +329,16 @@ export default function QueryResultCard({ result }: { result: QueryResult }) {
                           (row: Record<string, unknown>, index: number) => (
                             <TableRow
                               key={index}
-                              className="hover:bg-white/10 transition-colors duration-150 border-white/10"
+                              className="hover:bg-gray-50 transition-colors duration-150 border-gray-100"
                             >
                               {Object.values(row).map(
                                 (value: unknown, cellIndex: number) => (
                                   <TableCell
                                     key={cellIndex}
-                                    className="text-xs sm:text-sm px-2 sm:px-4 py-2 sm:py-3 text-white/80"
+                                    className="text-sm px-4 py-3 text-gray-900"
                                   >
                                     {value === null ? (
-                                      <span className="text-white/40 italic text-xs">
+                                      <span className="text-gray-400 italic text-xs">
                                         NULL
                                       </span>
                                     ) : (
@@ -354,7 +357,7 @@ export default function QueryResultCard({ result }: { result: QueryResult }) {
                   </ScrollArea>
 
                   {/* Table info footer */}
-                  <div className="px-3 sm:px-4 py-2 bg-white/5 border-t border-white/10 text-xs text-white/60 flex justify-between items-center">
+                  <div className="px-4 py-2 bg-gray-50 border-t border-gray-200 text-xs text-gray-600 flex justify-between items-center">
                     <span>
                       Showing {result.data.length} record
                       {result.data.length !== 1 ? "s" : ""}
@@ -367,99 +370,13 @@ export default function QueryResultCard({ result }: { result: QueryResult }) {
               </TabsContent>
 
               {/* Chart View */}
-              {showCharts && (
+              {showCharts && chartConfig && (
                 <TabsContent value="chart" className="mt-4">
-                  <div className="space-y-6">
-                    {/* Bar Chart */}
-                    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-                      <h4 className="text-sm font-medium text-white/80 mb-4">
-                        Bar Chart
-                      </h4>
-                      <div className="h-64 sm:h-80">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={chartData}>
-                            <CartesianGrid
-                              strokeDasharray="3 3"
-                              stroke="rgba(255,255,255,0.1)"
-                            />
-                            <XAxis
-                              dataKey="name"
-                              tick={{
-                                fontSize: 12,
-                                fill: "rgba(255,255,255,0.7)",
-                              }}
-                              stroke="rgba(255,255,255,0.3)"
-                            />
-                            <YAxis
-                              tick={{
-                                fontSize: 12,
-                                fill: "rgba(255,255,255,0.7)",
-                              }}
-                              stroke="rgba(255,255,255,0.3)"
-                            />
-                            <Tooltip
-                              formatter={(value: number) => [
-                                `${summary?.isAmount ? "$" : ""}${value}`,
-                                summary?.fieldDisplayName || "Value",
-                              ]}
-                              labelFormatter={(label) => `Item: ${label}`}
-                              contentStyle={{
-                                backgroundColor: "rgba(255,255,255,0.1)",
-                                border: "1px solid rgba(255,255,255,0.2)",
-                                borderRadius: "8px",
-                                backdropFilter: "blur(8px)",
-                                color: "white",
-                              }}
-                            />
-                            <Bar dataKey="value" fill="rgba(255,255,255,0.8)" />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-
-                    {/* Pie Chart */}
-                    <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-                      <h4 className="text-sm font-medium text-white/80 mb-4">
-                        Distribution
-                      </h4>
-                      <div className="h-64 sm:h-80">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={chartData}
-                              cx="50%"
-                              cy="50%"
-                              outerRadius={80}
-                              fill="rgba(255,255,255,0.8)"
-                              dataKey="value"
-                              label={({ name, percent }) =>
-                                `${name} ${((percent || 0) * 100).toFixed(0)}%`
-                              }
-                            >
-                              {chartData.map((entry, index) => (
-                                <Cell
-                                  key={`cell-${index}`}
-                                  fill={COLORS[index % COLORS.length]}
-                                />
-                              ))}
-                            </Pie>
-                            <Tooltip
-                              formatter={(value: number) => [
-                                `${summary?.isAmount ? "$" : ""}${value}`,
-                                summary?.fieldDisplayName || "Value",
-                              ]}
-                              contentStyle={{
-                                backgroundColor: "rgba(255,255,255,0.1)",
-                                border: "1px solid rgba(255,255,255,0.2)",
-                                borderRadius: "8px",
-                                backdropFilter: "blur(8px)",
-                                color: "white",
-                              }}
-                            />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
+                  <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                    <DynamicChart
+                      chartData={dynamicChartData}
+                      chartConfig={chartConfig}
+                    />
                   </div>
                 </TabsContent>
               )}
@@ -467,46 +384,46 @@ export default function QueryResultCard({ result }: { result: QueryResult }) {
               {/* Summary View */}
               {showCharts && summary && (
                 <TabsContent value="summary" className="mt-4">
-                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/10">
-                    <h4 className="text-lg font-semibold text-white/90 mb-4">
+                  <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">
                       Query Summary
                     </h4>
 
                     {/* Natural Language Summary */}
-                    <div className="mb-6 p-4 bg-white/5 rounded-lg border border-white/10">
-                      <p className="text-white/80 leading-relaxed">
+                    <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-gray-700 leading-relaxed">
                         {summary.description}
                       </p>
                     </div>
 
                     {/* Statistics Grid */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                      <div className="text-center p-3 bg-white/5 rounded-lg border border-white/10">
-                        <div className="text-lg sm:text-xl font-bold text-white/90">
+                      <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="text-xl font-bold text-gray-900">
                           {summary.count}
                         </div>
-                        <div className="text-xs text-white/60">Records</div>
+                        <div className="text-xs text-gray-600">Records</div>
                       </div>
-                      <div className="text-center p-3 bg-white/5 rounded-lg border border-white/10">
-                        <div className="text-lg sm:text-xl font-bold text-white/90">
+                      <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="text-xl font-bold text-gray-900">
                           {summary.isAmount ? "$" : ""}
                           {summary.total.toLocaleString()}
                         </div>
-                        <div className="text-xs text-white/60">Total</div>
+                        <div className="text-xs text-gray-600">Total</div>
                       </div>
-                      <div className="text-center p-3 bg-white/5 rounded-lg border border-white/10">
-                        <div className="text-lg sm:text-xl font-bold text-white/90">
+                      <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="text-xl font-bold text-gray-900">
                           {summary.isAmount ? "$" : ""}
                           {summary.average.toFixed(2)}
                         </div>
-                        <div className="text-xs text-white/60">Average</div>
+                        <div className="text-xs text-gray-600">Average</div>
                       </div>
-                      <div className="text-center p-3 bg-white/5 rounded-lg border border-white/10">
-                        <div className="text-lg sm:text-xl font-bold text-white/90">
+                      <div className="text-center p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="text-xl font-bold text-gray-900">
                           {summary.isAmount ? "$" : ""}
                           {summary.max}
                         </div>
-                        <div className="text-xs text-white/60">Maximum</div>
+                        <div className="text-xs text-gray-600">Maximum</div>
                       </div>
                     </div>
                   </div>

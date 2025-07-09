@@ -1,9 +1,5 @@
 "use client";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable react/no-unescaped-entities */
-
 import { useChat } from "@ai-sdk/react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -16,16 +12,12 @@ import WelcomeScreen from "./WelcomeScreen";
 import InputArea from "./InputArea";
 
 export default function ModernChat() {
-  const {
-    messages,
-    input,
-    handleInputChange,
-    handleSubmit,
-    isLoading: isGenerating,
-    setInput,
-  } = useChat({
-    api: "/api/chat",
-  });
+  const { messages, input, handleInputChange, handleSubmit, setInput, status } =
+    useChat({
+      api: "/api/chat",
+    });
+
+  const isGenerating = status === "streaming";
 
   const handleExampleClick = (example: string) => {
     setInput(example);

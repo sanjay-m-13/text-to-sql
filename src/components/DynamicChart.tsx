@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   Bar,
   BarChart,
@@ -48,7 +47,7 @@ export function DynamicChart({
   const renderChart = () => {
     if (!chartData || !chartConfig) return <div>No chart data</div>;
     const parsedChartData = chartData.map((item) => {
-      const parsedItem: { [key: string]: any } = {};
+      const parsedItem: { [key: string]: string | number } = {};
       for (const [key, value] of Object.entries(item)) {
         parsedItem[key] = isNaN(Number(value)) ? value : Number(value);
       }
