@@ -126,11 +126,11 @@ function MessageBubble({ message }: { message: Message }) {
     <div
       className={`flex gap-3 sm:gap-4 ${
         isUser ? "justify-end" : "justify-start"
-      } animate-in slide-in-from-bottom-2 duration-300`}
+      } animate-in slide-in-from-bottom-2 duration-500 hover:scale-[1.02] transition-all`}
     >
       {!isUser && (
-        <Avatar className="w-8 h-8 sm:w-10 sm:h-10 border-2 border-white/30 shadow-2xl flex-shrink-0 ring-2 ring-cyan-400/30 backdrop-blur-md">
-          <AvatarFallback className="bg-gradient-to-br from-cyan-500/80 via-blue-500/80 to-purple-500/80 text-white backdrop-blur-md">
+        <Avatar className="w-8 h-8 sm:w-10 sm:h-10 border-2 border-white/40 shadow-2xl flex-shrink-0 ring-2 ring-white/20 backdrop-blur-md animate-pulse hover:animate-spin transition-all duration-300">
+          <AvatarFallback className="bg-gradient-to-br from-white/20 to-gray-300/30 text-white backdrop-blur-md">
             <Bot className="w-4 h-4 sm:w-5 sm:h-5" />
           </AvatarFallback>
         </Avatar>
@@ -144,16 +144,16 @@ function MessageBubble({ message }: { message: Message }) {
         <Card
           className={`${
             isUser
-              ? "bg-gradient-to-r from-cyan-500/80 via-blue-500/80 to-purple-500/80 text-white shadow-2xl border border-white/20 backdrop-blur-md"
-              : "bg-white/10 backdrop-blur-xl shadow-2xl border border-white/20 text-white"
-          } overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-cyan-500/10`}
+              ? "bg-gradient-to-r from-white/25 via-gray-200/20 to-white/15 text-white shadow-2xl border border-white/30 backdrop-blur-md animate-pulse"
+              : "bg-white/8 backdrop-blur-xl shadow-2xl border border-white/15 text-white hover:bg-white/12"
+          } overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-white/20 hover:scale-[1.02] hover:border-white/40`}
         >
           <div className="p-4 sm:p-6">
             <div className="flex items-center gap-2 mb-3">
               {isUser ? (
-                <User className="w-3 h-3 sm:w-4 sm:h-4 text-white/80" />
+                <User className="w-3 h-3 sm:w-4 sm:h-4 text-white/90 animate-pulse" />
               ) : (
-                <Bot className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-400" />
+                <Bot className="w-3 h-3 sm:w-4 sm:h-4 text-white/90 animate-bounce" />
               )}
               <span
                 className={`text-xs sm:text-sm font-semibold ${
@@ -448,15 +448,15 @@ function QueryResultCard({ result }: { result: any }) {
   ];
 
   return (
-    <Card className="mt-3 bg-white/10 backdrop-blur-xl border border-white/20 w-full shadow-2xl hover:shadow-cyan-500/10 transition-all duration-300">
+    <Card className="mt-3 bg-white/8 backdrop-blur-xl border border-white/15 w-full shadow-2xl hover:shadow-white/20 hover:bg-white/12 hover:border-white/25 transition-all duration-500 hover:scale-[1.01] animate-pulse hover:animate-none">
       <div className="p-4 sm:p-6">
         {/* Enhanced Status Header */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4">
           <div className="flex items-center gap-2">
             {result.success ? (
-              <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />
+              <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white/80 animate-pulse" />
             ) : (
-              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-400" />
+              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-white/80 animate-bounce" />
             )}
             <span className="font-medium text-sm sm:text-base text-white/90">
               {result.success ? "Query Executed Successfully" : "Query Failed"}
@@ -875,28 +875,28 @@ function QueryResultCard({ result }: { result: any }) {
 function LoadingMessage() {
   return (
     <div className="flex gap-4 justify-start">
-      <Avatar className="w-10 h-10 border-2 border-white shadow-lg flex-shrink-0">
-        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-          <Bot className="w-5 h-5" />
+      <Avatar className="w-10 h-10 border-2 border-white/40 shadow-2xl flex-shrink-0 animate-pulse hover:animate-spin transition-all duration-300">
+        <AvatarFallback className="bg-gradient-to-br from-white/20 to-gray-300/30 text-white backdrop-blur-md">
+          <Bot className="w-5 h-5 animate-bounce" />
         </AvatarFallback>
       </Avatar>
 
-      <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0 max-w-md">
+      <Card className="bg-white/8 backdrop-blur-xl shadow-2xl border border-white/15 max-w-md animate-pulse hover:bg-white/12 hover:scale-105 transition-all duration-500">
         <div className="p-6">
           <div className="flex items-center gap-3">
-            <div className="animate-spin w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full" />
-            <span className="text-slate-700 font-medium">
+            <div className="animate-spin w-5 h-5 border-2 border-white/80 border-t-transparent rounded-full" />
+            <span className="text-white/90 font-medium">
               Generating SQL query...
             </span>
           </div>
           <div className="mt-3 flex gap-1">
-            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+            <div className="w-2 h-2 bg-white/80 rounded-full animate-bounce"></div>
             <div
-              className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"
+              className="w-2 h-2 bg-white/80 rounded-full animate-bounce"
               style={{ animationDelay: "0.2s" }}
             ></div>
             <div
-              className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"
+              className="w-2 h-2 bg-white/80 rounded-full animate-bounce"
               style={{ animationDelay: "0.4s" }}
             ></div>
           </div>
@@ -1136,10 +1136,10 @@ function WelcomeScreen({
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
       <div className="mb-8">
-        <div className="w-24 h-24 bg-gradient-to-br from-cyan-500/80 via-blue-500/80 to-purple-500/80 backdrop-blur-md border border-white/20 rounded-3xl flex items-center justify-center mb-8 shadow-2xl mx-auto">
-          <Database className="w-12 h-12 text-white" />
+        <div className="w-24 h-24 bg-gradient-to-br from-white/25 to-gray-300/20 backdrop-blur-md border border-white/30 rounded-3xl flex items-center justify-center mb-8 shadow-2xl mx-auto animate-pulse hover:animate-spin hover:scale-110 transition-all duration-500">
+          <Database className="w-12 h-12 text-white animate-bounce" />
         </div>
-        <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300 bg-clip-text text-transparent">
+        <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-white via-gray-200 to-gray-300 bg-clip-text text-transparent animate-pulse">
           Welcome to SQL Assistant
         </h1>
         <p className="text-white/80 max-w-2xl text-xl leading-relaxed">
@@ -1150,13 +1150,13 @@ function WelcomeScreen({
 
       {/* Database Information Section */}
       <div className="mb-8 max-w-5xl w-full">
-        <Card className="bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl">
+        <Card className="bg-white/8 backdrop-blur-xl border border-white/15 shadow-2xl hover:bg-white/12 hover:border-white/25 transition-all duration-500 animate-pulse hover:animate-none">
           <div className="p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-cyan-500/80 to-blue-500/80 backdrop-blur-md border border-white/20 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-white/20 to-gray-300/25 backdrop-blur-md border border-white/30 rounded-xl flex items-center justify-center animate-spin hover:animate-bounce transition-all duration-300">
                 <Database className="w-5 h-5 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-white">
+              <h2 className="text-2xl font-bold text-white animate-pulse">
                 Your Database Overview
               </h2>
             </div>
@@ -1332,15 +1332,20 @@ export default function ModernChat() {
 
   return (
     <div className="flex flex-col h-screen relative overflow-hidden">
-      {/* Liquid Glass Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
-        {/* Animated liquid blobs */}
+      {/* Monochrome Liquid Glass Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-slate-800">
+        {/* Animated monochrome liquid blobs */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-cyan-400/30 to-blue-500/30 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-purple-400/30 to-pink-500/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/3 left-1/4 w-80 h-80 bg-gradient-to-r from-indigo-400/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse delay-500"></div>
-          <div className="absolute bottom-1/3 right-1/4 w-72 h-72 bg-gradient-to-l from-pink-400/25 to-purple-500/25 rounded-full blur-3xl animate-pulse delay-700"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-br from-blue-400/15 to-indigo-500/15 rounded-full blur-3xl animate-pulse delay-300"></div>
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-white/20 to-gray-300/15 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-gray-200/15 to-white/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/3 left-1/4 w-80 h-80 bg-gradient-to-r from-white/10 to-gray-400/20 rounded-full blur-3xl animate-pulse delay-500"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-72 h-72 bg-gradient-to-l from-gray-300/15 to-white/12 rounded-full blur-3xl animate-pulse delay-700"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-br from-white/8 to-gray-200/10 rounded-full blur-3xl animate-pulse delay-300"></div>
+
+          {/* Additional floating elements for more animation */}
+          <div className="absolute top-20 left-20 w-32 h-32 bg-white/5 rounded-full blur-2xl animate-bounce delay-200"></div>
+          <div className="absolute bottom-20 right-20 w-40 h-40 bg-gray-300/8 rounded-full blur-2xl animate-bounce delay-1200"></div>
+          <div className="absolute top-1/4 right-1/3 w-24 h-24 bg-white/6 rounded-full blur-xl animate-ping delay-800"></div>
         </div>
 
         {/* Glass overlay */}
@@ -1360,11 +1365,11 @@ export default function ModernChat() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 sm:gap-4">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-xl transform hover:scale-105 transition-transform duration-200">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-white/20 to-gray-300/30 backdrop-blur-md border border-white/30 rounded-xl flex items-center justify-center shadow-2xl transform hover:scale-110 hover:rotate-3 transition-all duration-300 animate-pulse">
                 <Database className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300 bg-clip-text text-transparent">
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-white via-gray-200 to-gray-300 bg-clip-text text-transparent animate-pulse">
                   SQL Assistant
                 </h1>
                 <p className="text-xs sm:text-sm text-white/80 hidden sm:block">
@@ -1377,9 +1382,9 @@ export default function ModernChat() {
             </div>
 
             {/* Status indicator */}
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-green-500/20 backdrop-blur-sm rounded-full border border-green-400/30">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-xs font-medium text-green-300">Online</span>
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 animate-pulse">
+              <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
+              <span className="text-xs font-medium text-white/90">Online</span>
             </div>
           </div>
         </div>
@@ -1439,7 +1444,7 @@ export default function ModernChat() {
                     value={input}
                     onChange={handleInputChange}
                     placeholder="Describe the SQL query you need... (e.g., 'Show customers with orders over $100')"
-                    className="w-full min-h-[50px] sm:min-h-[60px] max-h-[100px] sm:max-h-[120px] resize-none border-2 border-white/20 focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20 rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 pr-10 sm:pr-12 transition-all duration-300 bg-white/10 backdrop-blur-md shadow-2xl text-white placeholder:text-white/60 text-sm sm:text-base"
+                    className="w-full min-h-[50px] sm:min-h-[60px] max-h-[100px] sm:max-h-[120px] resize-none border-2 border-white/25 focus:border-white/60 focus:ring-2 focus:ring-white/30 rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2.5 sm:py-3 pr-10 sm:pr-12 transition-all duration-500 bg-white/10 backdrop-blur-md shadow-2xl text-white placeholder:text-white/60 text-sm sm:text-base hover:bg-white/15 hover:border-white/40 hover:shadow-white/10 focus:scale-[1.02]"
                     disabled={isGenerating}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
@@ -1488,7 +1493,7 @@ export default function ModernChat() {
                 <Button
                   type="submit"
                   disabled={isGenerating || !input.trim()}
-                  className="w-full sm:w-auto h-[50px] sm:h-[60px] px-6 sm:px-8 bg-gradient-to-r from-cyan-500/80 via-blue-500/80 to-purple-500/80 hover:from-cyan-400/90 hover:via-blue-400/90 hover:to-purple-400/90 disabled:from-white/20 disabled:to-white/10 text-white border border-white/20 rounded-xl sm:rounded-2xl shadow-2xl hover:shadow-cyan-500/25 backdrop-blur-md transition-all duration-300 transform hover:scale-105 disabled:transform-none disabled:shadow-sm font-medium"
+                  className="w-full sm:w-auto h-[50px] sm:h-[60px] px-6 sm:px-8 bg-gradient-to-r from-white/25 via-gray-200/20 to-white/15 hover:from-white/35 hover:via-gray-100/30 hover:to-white/25 disabled:from-white/10 disabled:to-white/5 text-white border border-white/30 rounded-xl sm:rounded-2xl shadow-2xl hover:shadow-white/25 backdrop-blur-md transition-all duration-500 transform hover:scale-110 hover:rotate-1 disabled:transform-none disabled:shadow-sm font-medium animate-pulse hover:animate-none"
                   size="lg"
                 >
                   {isGenerating ? (
