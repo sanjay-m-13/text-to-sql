@@ -139,7 +139,10 @@ export default function QueryResultCard({ result }: { result: QueryResult }) {
 
   // If chartConfig exists, override type with selectedChartType
   const chartConfigWithType = chartConfig
-    ? { ...chartConfig, type: selectedChartType as any }
+    ? {
+        ...chartConfig,
+        type: selectedChartType as "bar" | "line" | "area" | "pie",
+      }
     : null;
 
   // Generate summary statistics and natural language description
@@ -393,7 +396,11 @@ export default function QueryResultCard({ result }: { result: QueryResult }) {
                       {chartTypes.map((ct) => (
                         <Button
                           key={ct.type}
-                          variant={selectedChartType === ct.type ? "default" : "outline"}
+                          variant={
+                            selectedChartType === ct.type
+                              ? "default"
+                              : "outline"
+                          }
                           size="sm"
                           className={
                             selectedChartType === ct.type
