@@ -1,95 +1,51 @@
 import { streamText, tool } from 'ai';
 import { groq } from '@ai-sdk/groq';
-import { Pool } from 'pg';
 import { z } from 'zod';
 
-// PostgreSQL connection pool
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-});
-
-// Types for database schema
-interface DatabaseColumn {
-  column_name: string;
-  data_type: string;
-  is_nullable: string;
-  column_default: string | null;
+// Types for API response
+interface ApiResponse {
+  rowCount: number;
+  rows: Record<string, unknown>[];
 }
 
-interface DatabaseTable {
-  table_name: string;
-  table_schema: string;
-  columns: DatabaseColumn[];
-}
-
-interface SchemaRow {
-  table_name: string;
-  table_schema: string;
-  column_name: string;
-  data_type: string;
-  is_nullable: string;
-  column_default: string | null;
-}
-
-// Function to get database schema
+// Function to get database schema from external API
 async function getDatabaseSchema(): Promise<string> {
-  const client = await pool.connect();
   try {
-    const query = `
-      SELECT
-        t.table_name,
-        t.table_schema,
-        c.column_name,
-        c.data_type,
-        c.is_nullable,
-        c.column_default
-      FROM information_schema.tables t
-      JOIN information_schema.columns c ON t.table_name = c.table_name
-        AND t.table_schema = c.table_schema
-      WHERE t.table_schema NOT IN ('information_schema', 'pg_catalog', 'pg_toast')
-        AND t.table_type = 'BASE TABLE'
-      ORDER BY t.table_schema, t.table_name, c.ordinal_position
-    `;
+    // You can either hardcode the schema or fetch it from your API
+    // For now, I'll provide a basic schema - you can update this based on your actual database
+    const schemaDescription = `Database Schema:
 
-    const result = await client.query(query);
+Table: products
+Columns:
+  - id: integer (not null)
+  - name: varchar (not null)
+  - price: decimal (nullable)
+  - category: varchar (nullable)
+  - created_at: timestamp (nullable)
 
-    // Group by table
-    const tables: Record<string, DatabaseTable> = {};
-    result.rows.forEach((row: SchemaRow) => {
-      const key = `${row.table_schema}.${row.table_name}`;
-      if (!tables[key]) {
-        tables[key] = {
-          table_name: row.table_name,
-          table_schema: row.table_schema,
-          columns: []
-        };
-      }
-      tables[key].columns.push({
-        column_name: row.column_name,
-        data_type: row.data_type,
-        is_nullable: row.is_nullable,
-        column_default: row.column_default
-      });
-    });
+Table: customers
+Columns:
+  - id: integer (not null)
+  - name: varchar (not null)
+  - email: varchar (nullable)
+  - phone: varchar (nullable)
+  - created_at: timestamp (nullable)
 
-    // Format schema for AI
-    let schemaDescription = "Database Schema:\n\n";
-    Object.values(tables).forEach((table: DatabaseTable) => {
-      const fullTableName = table.table_schema === 'public' ? table.table_name : `${table.table_schema}.${table.table_name}`;
-      schemaDescription += `Table: ${fullTableName}\n`;
-      schemaDescription += "Columns:\n";
-      table.columns.forEach((col: DatabaseColumn) => {
-        const nullable = col.is_nullable === 'YES' ? ' (nullable)' : ' (not null)';
-        const defaultVal = col.column_default ? ` default: ${col.column_default}` : '';
-        schemaDescription += `  - ${col.column_name}: ${col.data_type}${nullable}${defaultVal}\n`;
-      });
-      schemaDescription += "\n";
-    });
+Table: orders
+Columns:
+  - id: integer (not null)
+  - customer_id: integer (not null)
+  - product_id: integer (not null)
+  - quantity: integer (not null)
+  - total_amount: decimal (not null)
+  - order_date: timestamp (nullable)
+
+`;
 
     return schemaDescription;
-  } finally {
-    client.release();
+  } catch (error) {
+    console.error('Error getting database schema:', error);
+    return "Database schema not available";
   }
 }
 
@@ -122,34 +78,30 @@ Guidelines:
           description: 'Execute a PostgreSQL SELECT query and return both the SQL and results',
           parameters: z.object({
             sql: z.string().describe('The SQL SELECT query to execute'),
-            explanation: z.string().describe('Explanation of what the query does')
+            explanation: z.string().describe('Explanation of what the query does'),
+            summary: z.string().describe('Summary of the results').optional()
           }),
-          execute: async ({ sql, explanation }) => {
+          execute: async ({ sql, explanation, summary }) => {
             try {
               // Safety check - only allow SELECT queries
-              const trimmedSql = sql.trim().toLowerCase();
-              if (!trimmedSql.startsWith('select')) {
-                throw new Error('Only SELECT queries are allowed for security reasons');
-              }
-
-              // Execute the query
-              const client = await pool.connect();
-              try {
-                const queryResult = await client.query(sql);
+              if (!sql.trim().toLowerCase().startsWith('select')) {
                 return {
-                  success: true,
+                  success: false,
                   sql,
                   explanation,
-                  data: queryResult.rows,
-                  rowCount: queryResult.rowCount,
-                  columns: queryResult.fields?.map(field => ({
-                    name: field.name,
-                    dataType: field.dataTypeID
-                  })) || []
+                  error: 'Only SELECT queries are allowed'
                 };
-              } finally {
-                client.release();
               }
+
+              const queryResult: ApiResponse = await getDBDataFromQuery(sql);
+              return {
+                success: true,
+                sql,
+                explanation,
+                summary,
+                data: queryResult.rows,
+                rowCount: queryResult.rowCount
+              };
             } catch (error) {
               return {
                 success: false,
@@ -167,5 +119,31 @@ Guidelines:
   } catch (error) {
     console.error('Error in chat API:', error);
     return new Response('Error processing request', { status: 500 });
+  }
+}
+
+const getDBDataFromQuery = async (payload: string): Promise<ApiResponse> => {
+  try {
+    const response = await fetch("http://localhost:8080/run-sql", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query: payload
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data: ApiResponse = await response.json();
+    console.log("data", data);
+    return data;
+
+  } catch (error) {
+    console.error('Error fetching data from API:', error);
+    throw error;
   }
 }
