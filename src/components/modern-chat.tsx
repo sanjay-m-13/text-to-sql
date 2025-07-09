@@ -2,6 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useRef, useEffect } from "react";
 
 // Import our new components
 import LiquidGlassBackground from "./LiquidGlassBackground";
@@ -18,6 +19,17 @@ export default function ModernChat() {
     });
 
   const isGenerating = status === "streaming";
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when new messages are added
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Scroll to bottom when messages change or when generating
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isGenerating]);
 
   const handleExampleClick = (example: string) => {
     setInput(example);
@@ -47,6 +59,8 @@ export default function ModernChat() {
                   <MessageBubble key={message.id} message={message} />
                 ))}
                 {isGenerating && <LoadingMessage />}
+                {/* Invisible element to scroll to */}
+                <div ref={messagesEndRef} />
               </div>
             )}
           </div>

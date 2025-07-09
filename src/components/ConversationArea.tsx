@@ -51,6 +51,8 @@ export default function ConversationArea({
     }
   }, [isLoading, scrollToBottom, messages.length]);
 
+  console.log("messages", messages);
+
   return (
     <div className="flex-1 overflow-hidden flex flex-col">
       <div className="flex-1 overflow-auto p-6 custom-scrollbar">

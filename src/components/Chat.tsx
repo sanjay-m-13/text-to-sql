@@ -36,6 +36,8 @@ export default function Chat() {
     setInput(example);
   };
 
+  console.log("messages", messages);
+
   return (
     <div
       className="flex h-screen"
