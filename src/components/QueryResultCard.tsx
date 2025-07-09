@@ -20,6 +20,8 @@ import {
   FileText,
 } from "lucide-react";
 import { DynamicChart } from "./DynamicChart";
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface QueryResult {
   success: boolean;
@@ -121,11 +123,24 @@ export default function QueryResultCard({ result }: { result: QueryResult }) {
 
   const showCharts = shouldShowChartsAndSummary(result);
 
+  const chartTypes = [
+    { type: "bar", label: "Bar" },
+    { type: "line", label: "Line" },
+    { type: "area", label: "Area" },
+    { type: "pie", label: "Pie" },
+  ];
+  const [selectedChartType, setSelectedChartType] = useState<string>("bar");
+
   // Get data for DynamicChart component
   const { chartData: dynamicChartData, chartConfig } =
     showCharts && result.data
       ? transformDataForChart(result.data)
       : { chartData: [], chartConfig: null };
+
+  // If chartConfig exists, override type with selectedChartType
+  const chartConfigWithType = chartConfig
+    ? { ...chartConfig, type: selectedChartType as any }
+    : null;
 
   // Generate summary statistics and natural language description
   const generateSummary = (data: Record<string, unknown>[]) => {
@@ -205,7 +220,7 @@ export default function QueryResultCard({ result }: { result: QueryResult }) {
     showCharts && result.data ? generateSummary(result.data) : null;
 
   return (
-    <Card className="mt-4 bg-white border border-gray-200 w-full shadow-md hover:shadow-lg transition-shadow duration-200">
+    <Card className="mt-4 bg-white border border-gray-200 w-full shadow-lg hover:shadow-xl transition-shadow duration-200 rounded-2xl">
       <div className="p-6">
         {/* Status Header */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4">
@@ -370,12 +385,30 @@ export default function QueryResultCard({ result }: { result: QueryResult }) {
               </TabsContent>
 
               {/* Chart View */}
-              {showCharts && chartConfig && (
+              {showCharts && chartConfigWithType && (
                 <TabsContent value="chart" className="mt-4">
                   <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+                    {/* Chart Type Selector */}
+                    <div className="flex flex-wrap gap-2 mb-4 justify-end">
+                      {chartTypes.map((ct) => (
+                        <Button
+                          key={ct.type}
+                          variant={selectedChartType === ct.type ? "default" : "outline"}
+                          size="sm"
+                          className={
+                            selectedChartType === ct.type
+                              ? "ring-2 ring-blue-500"
+                              : ""
+                          }
+                          onClick={() => setSelectedChartType(ct.type)}
+                        >
+                          {ct.label}
+                        </Button>
+                      ))}
+                    </div>
                     <DynamicChart
                       chartData={dynamicChartData}
-                      chartConfig={chartConfig}
+                      chartConfig={chartConfigWithType}
                     />
                   </div>
                 </TabsContent>
@@ -391,7 +424,7 @@ export default function QueryResultCard({ result }: { result: QueryResult }) {
 
                     {/* Natural Language Summary */}
                     <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                      <p className="text-gray-700 leading-relaxed">
+                      <p className="text-gray-700 leading-relaxed text-base">
                         {summary.description}
                       </p>
                     </div>

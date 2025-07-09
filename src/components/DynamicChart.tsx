@@ -26,15 +26,25 @@ function toTitleCase(str: string): string {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
+const fallbackColors = [
+  "#6366f1", // blue
+  "#f59e0b", // orange
+  "#10b981", // green
+  "#ef4444", // red
+  "#a21caf", // purple
+  "#eab308", // yellow
+  "#0ea5e9", // sky
+  "#f43f5e", // pink
+];
 const colors = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
-  "hsl(var(--chart-6))",
-  "hsl(var(--chart-7))",
-  "hsl(var(--chart-8))",
+  "hsl(var(--chart-1), 1)",
+  "hsl(var(--chart-2), 1)",
+  "hsl(var(--chart-3), 1)",
+  "hsl(var(--chart-4), 1)",
+  "hsl(var(--chart-5), 1)",
+  "hsl(var(--chart-6), 1)",
+  "hsl(var(--chart-7), 1)",
+  "hsl(var(--chart-8), 1)",
 ];
 
 export function DynamicChart({
@@ -96,7 +106,7 @@ export function DynamicChart({
               <Bar
                 key={key}
                 dataKey={key}
-                fill={colors[index % colors.length]}
+                fill={`var(--chart-${(index % 8) + 1}, ${fallbackColors[index % fallbackColors.length]})`}
               />
             ))}
           </BarChart>
@@ -141,7 +151,7 @@ export function DynamicChart({
                     key={key}
                     type="monotone"
                     dataKey={key}
-                    stroke={colors[index % colors.length]}
+                    stroke={`var(--chart-${(index % 8) + 1}, ${fallbackColors[index % fallbackColors.length]})`}
                   />
                 ))
               : chartConfig.yKeys.map((key, index) => (
@@ -149,7 +159,7 @@ export function DynamicChart({
                     key={key}
                     type="monotone"
                     dataKey={key}
-                    stroke={colors[index % colors.length]}
+                    stroke={`var(--chart-${(index % 8) + 1}, ${fallbackColors[index % fallbackColors.length]})`}
                   />
                 ))}
           </LineChart>
@@ -167,8 +177,8 @@ export function DynamicChart({
                 key={key}
                 type="monotone"
                 dataKey={key}
-                fill={colors[index % colors.length]}
-                stroke={colors[index % colors.length]}
+                fill={`var(--chart-${(index % 8) + 1}, ${fallbackColors[index % fallbackColors.length]})`}
+                stroke={`var(--chart-${(index % 8) + 1}, ${fallbackColors[index % fallbackColors.length]})`}
               />
             ))}
           </AreaChart>
@@ -187,7 +197,7 @@ export function DynamicChart({
               {chartData.map((_, index) => (
                 <Cell
                   key={`cell-${index}`}
-                  fill={colors[index % colors.length]}
+                  fill={`var(--chart-${(index % 8) + 1}, ${fallbackColors[index % fallbackColors.length]})`}
                 />
               ))}
             </Pie>
