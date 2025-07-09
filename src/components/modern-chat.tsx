@@ -4,7 +4,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/no-unescaped-entities */
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useChat } from "@ai-sdk/react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -1313,10 +1313,6 @@ function WelcomeScreen({
 }
 
 export default function ModernChat() {
-  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
-
   const {
     messages,
     input,
