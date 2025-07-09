@@ -9,11 +9,13 @@ import LoadingMessage from "./LoadingMessage";
 interface ConversationAreaProps {
   messages: Message[];
   isLoading: boolean;
+  onExampleClick: (example: string) => void;
 }
 
 export default function ConversationArea({
   messages,
   isLoading,
+  onExampleClick,
 }: ConversationAreaProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const prevMessagesLengthRef = useRef(0);
@@ -53,11 +55,11 @@ export default function ConversationArea({
     <div className="flex-1 overflow-hidden flex flex-col">
       <div className="flex-1 overflow-auto p-6 custom-scrollbar">
         {messages.length === 0 ? (
-          <WelcomeScreen />
+          <WelcomeScreen onExampleClick={onExampleClick} />
         ) : (
           <div className="space-y-6">
-            {messages.map((message, index) => (
-              <MessageBubble key={message.id} message={message} index={index} />
+            {messages.map((message) => (
+              <MessageBubble key={message.id} message={message} />
             ))}
             {isLoading && <LoadingMessage />}
           </div>

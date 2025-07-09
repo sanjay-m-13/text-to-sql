@@ -4,7 +4,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { Message } from "ai";
-import QueryResult from "./QueryResult";
+import QueryResultCard from "./QueryResultCard";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Card } from "@/components/ui/card";
+import { Bot, User } from "lucide-react";
 
 // Define types for tool invocations
 interface ToolInvocation {
@@ -22,74 +25,23 @@ interface QueryResultType {
   error?: string;
 }
 
-// Simple Person Icon component to replace MUI icon
-const PersonIcon = () => (
-  <svg
-    className="w-6 h-6"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-    />
-  </svg>
-);
-
-// Simple SmartToy Icon component to replace MUI icon
-const SmartToyIcon = () => (
-  <svg
-    className="w-6 h-6"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={1.5}
-      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z"
-    />
-  </svg>
-);
-
-interface MessageBubbleProps {
-  message: Message;
-  index: number;
-}
-
-export default function MessageBubble({ message, index }: MessageBubbleProps) {
+// Enhanced Message Bubble Component with Monochrome Liquid Glass
+export default function MessageBubble({ message }: { message: Message }) {
   const isUser = message.role === "user";
-  const containsSQL =
-    message.content.includes("SELECT") ||
-    message.content.includes("CREATE") ||
-    message.content.includes("INSERT") ||
-    message.content.includes("UPDATE") ||
-    message.content.includes("DELETE");
 
   // Parse tool results from message
-  const toolResults =
-    (message.toolInvocations || (message as any).toolCalls)
-      ?.map((invocation: any) => {
+  const toolResults: QueryResultType[] =
+    (
+      message.toolInvocations ||
+      (message as { toolCalls?: ToolInvocation[] }).toolCalls
+    )
+      ?.map((invocation: ToolInvocation) => {
         if (
           invocation.toolName === "executeQuery" &&
           "result" in invocation &&
           invocation.result
         ) {
-          return invocation.result as {
-            success: boolean;
-            sql: string;
-            explanation: string;
-            data?: Record<string, unknown>[];
-            rowCount?: number;
-            columns?: Array<{ name: string; dataType: number }>;
-            error?: string;
-          };
+          return invocation.result;
         }
         return null;
       })
@@ -98,75 +50,83 @@ export default function MessageBubble({ message, index }: MessageBubbleProps) {
           result !== null
       ) || [];
 
-  // Debug logging - remove this after debugging
-  console.log("Message:", message);
-  console.log("Tool Invocations:", message.toolInvocations);
-  console.log("Tool Calls:", (message as any).toolCalls);
-  if (toolResults.length > 0) {
-    console.log("Tool Results:", toolResults);
-    console.log("First result data:", toolResults[0]?.data);
-  }
-
   return (
     <div
-      className="animate-fade-in"
-      style={{ animationDelay: `${index * 100}ms` }}
+      className={`flex gap-3 sm:gap-4 ${
+        isUser ? "justify-end" : "justify-start"
+      } animate-in slide-in-from-bottom-2 duration-500 hover:scale-[1.02] transition-all`}
     >
+      {!isUser && (
+        <Avatar className="w-8 h-8 sm:w-10 sm:h-10 border-2 border-white/40 shadow-2xl flex-shrink-0 ring-2 ring-white/20 backdrop-blur-md animate-pulse hover:animate-spin transition-all duration-300">
+          <AvatarFallback className="bg-gradient-to-br from-white/20 to-gray-300/30 text-white backdrop-blur-md">
+            <Bot className="w-4 h-4 sm:w-5 sm:h-5" />
+          </AvatarFallback>
+        </Avatar>
+      )}
+
       <div
-        className={`p-6 rounded-2xl ${
-          isUser ? "ml-12 border" : "mr-12 shadow-sm"
+        className={`${
+          isUser ? "max-w-[90%] sm:max-w-[85%] order-first" : "w-full"
         }`}
-        style={{
-          backgroundColor: isUser
-            ? "var(--primary-50)"
-            : "var(--background-paper)",
-          borderColor: isUser ? "var(--primary-200)" : "transparent",
-        }}
       >
-        <div className="flex items-start gap-4">
-          <div
-            className="w-10 h-10 rounded-full flex items-center justify-center text-white"
-            style={{
-              backgroundColor: isUser
-                ? "var(--primary-main)"
-                : "var(--secondary-main)",
-            }}
-          >
-            {isUser ? <PersonIcon /> : <SmartToyIcon />}
-          </div>
-          <div className="flex-1">
-            <span
-              className="text-xs font-semibold uppercase tracking-wider block mb-2"
-              style={{
-                color: isUser ? "var(--primary-main)" : "var(--secondary-main)",
-              }}
-            >
-              {isUser ? "You" : "Assistant"}
-            </span>
+        <Card
+          className={`${
+            isUser
+              ? "bg-gradient-to-r from-white/25 via-gray-200/20 to-white/15 text-white shadow-2xl border border-white/30 backdrop-blur-md animate-pulse"
+              : "bg-white/8 backdrop-blur-xl shadow-2xl border border-white/15 text-white hover:bg-white/12"
+          } overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-white/20 hover:scale-[1.02] hover:border-white/40`}
+        >
+          <div className="p-4 sm:p-6">
+            <div className="flex items-center gap-2 mb-3">
+              {isUser ? (
+                <User className="w-3 h-3 sm:w-4 sm:h-4 text-white/90 animate-pulse" />
+              ) : (
+                <Bot className="w-3 h-3 sm:w-4 sm:h-4 text-white/90 animate-bounce" />
+              )}
+              <span
+                className={`text-xs sm:text-sm font-semibold ${
+                  isUser ? "text-white/90" : "text-white/90"
+                }`}
+              >
+                {isUser ? "You" : "SQL Assistant"}
+              </span>
+
+              {/* Timestamp */}
+              <span
+                className={`text-xs opacity-60 ml-auto ${
+                  isUser ? "text-white/60" : "text-white/60"
+                }`}
+              >
+                {new Date().toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            </div>
+
             <div
-              className={`whitespace-pre-wrap leading-relaxed ${
-                containsSQL ? "p-4 rounded-lg text-sm font-mono" : ""
+              className={`text-sm sm:text-base leading-relaxed whitespace-pre-wrap ${
+                isUser ? "text-white" : "text-white/90"
               }`}
-              style={{
-                fontFamily: containsSQL
-                  ? 'Monaco, Menlo, "Ubuntu Mono", monospace'
-                  : "inherit",
-                backgroundColor: containsSQL
-                  ? "var(--grey-100)"
-                  : "transparent",
-                fontSize: containsSQL ? "0.875rem" : "inherit",
-              }}
             >
               {message.content}
             </div>
 
             {/* Render query results */}
             {toolResults.map((result: QueryResultType, resultIndex: number) => (
-              <QueryResult key={resultIndex} result={result} />
+              <QueryResultCard key={resultIndex} result={result} />
             ))}
           </div>
-        </div>
+        </Card>
       </div>
+
+      {isUser && (
+        <Avatar className="w-8 h-8 sm:w-10 sm:h-10 border-2 border-white/40 shadow-2xl flex-shrink-0 ring-2 ring-white/20 backdrop-blur-md">
+          <AvatarFallback className="bg-gradient-to-br from-white/25 via-gray-200/20 to-white/15 text-white backdrop-blur-md">
+            <User className="w-4 h-4 sm:w-5 sm:h-5" />
+          </AvatarFallback>
+        </Avatar>
+      )}
     </div>
   );
 }

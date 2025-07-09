@@ -8,10 +8,16 @@ import ChatInput from "./ChatInput";
 import { useChat } from "@ai-sdk/react";
 
 export default function Chat() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } =
-    useChat({
-      api: "/api/chat",
-    });
+  const {
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit,
+    isLoading,
+    setInput,
+  } = useChat({
+    api: "/api/chat",
+  });
   const [selectedConversation, setSelectedConversation] = useState<
     string | null
   >(null);
@@ -24,6 +30,10 @@ export default function Chat() {
   const handleSelectConversation = (id: string) => {
     setSelectedConversation(id);
     // In a real app, you would load the selected conversation
+  };
+
+  const handleExampleClick = (example: string) => {
+    setInput(example);
   };
 
   return (
@@ -39,7 +49,11 @@ export default function Chat() {
 
       <div className="flex-1 flex flex-col">
         <ChatHeader />
-        <ConversationArea messages={messages} isLoading={isLoading} />
+        <ConversationArea
+          messages={messages}
+          isLoading={isLoading}
+          onExampleClick={handleExampleClick}
+        />
         <ChatInput
           input={input}
           isLoading={isLoading}
