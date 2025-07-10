@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { getSchemaDetailsAPI } from "@/lib/api-utils"
 
 interface TableInfo {
   schema: string;
@@ -20,10 +21,58 @@ interface TableInfo {
   }>;
 }
 
+interface SchemaRow {
+  table_name: string;
+  table_schema: string;
+  column_name: string;
+  data_type: string;
+  is_nullable: string;
+  column_default: string | null;
+}
+
 export async function GET() {
   try {
-    // Static schema definition - update this based on your actual database structure
-    const tables: TableInfo[] = [
+    // Fetch schema from external API
+    const schemaData = await getSchemaDetailsAPI();
+
+    // Transform the schema data to match our interface
+    const tables: Record<string, TableInfo> = {};
+
+    schemaData.rows.forEach((row: Record<string, unknown>) => {
+      const schemaRow = row as unknown as SchemaRow;
+      const key = `${schemaRow.table_schema}.${schemaRow.table_name}`;
+
+      if (!tables[key]) {
+        tables[key] = {
+          schema: schemaRow.table_schema,
+          name: schemaRow.table_name,
+          type: "BASE TABLE",
+          columns: [],
+          foreignKeys: [],
+        };
+      }
+
+      tables[key].columns.push({
+        name: schemaRow.column_name,
+        type: schemaRow.data_type,
+        nullable: schemaRow.is_nullable === "YES",
+        default: schemaRow.column_default,
+        position: tables[key].columns.length + 1,
+        isPrimaryKey: false, // You might need to enhance your API to provide this info
+      });
+    });
+
+    const tableArray = Object.values(tables);
+
+    return NextResponse.json({
+      tables: tableArray,
+      totalTables: tableArray.length,
+    })
+  } catch (error) {
+    console.error("Error fetching schema:", error)
+
+    // Fallback to static schema if API fails
+    const fallbackTables: TableInfo[] = [
       {
         schema: "public",
         name: "products",
@@ -70,11 +119,8 @@ export async function GET() {
     ];
 
     return NextResponse.json({
-      tables,
-      totalTables: tables.length,
+      tables: fallbackTables,
+      totalTables: fallbackTables.length,
     })
-  } catch (error) {
-    console.error("Error fetching schema:", error)
-    return NextResponse.json({ error: "Failed to fetch database schema" }, { status: 500 })
   }
 }

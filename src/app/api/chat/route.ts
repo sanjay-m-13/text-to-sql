@@ -1,6 +1,7 @@
 import { streamText, tool } from 'ai';
 import { groq } from '@ai-sdk/groq';
 import { z } from 'zod';
+import { getSchemaDetailsAPI, getDBDataFromQuery } from '@/lib/api-utils';
 
 // Types for API response
 interface ApiResponse {
@@ -36,7 +37,7 @@ async function getDatabaseSchema(): Promise<string> {
 
   try {
 
-    const result = await getSchemaAPI();
+    const result = await getSchemaDetailsAPI();
 
     // Group by table
     const tables: Record<string, DatabaseTable> = {};
@@ -153,50 +154,3 @@ Guidelines:
   }
 }
 
-const getSchemaAPI = async ()=>{
-  try {
-    const response = await fetch("http://localhost:8080/schema", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data: ApiResponse = await response.json();
-    return data;
-
-  } catch (error) {
-    console.error('Error fetching schema from API:', error);
-    throw error;
-  }
-}
-
-const getDBDataFromQuery = async (payload: string): Promise<ApiResponse> => {
-  try {
-    const response = await fetch("http://localhost:8080/run-sql", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        query: payload
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data: ApiResponse = await response.json();
-    console.log("data", data);
-    return data;
-
-  } catch (error) {
-    console.error('Error fetching data from API:', error);
-    throw error;
-  }
-}
