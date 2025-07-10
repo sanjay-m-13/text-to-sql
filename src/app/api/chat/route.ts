@@ -8,39 +8,69 @@ interface ApiResponse {
   rows: Record<string, unknown>[];
 }
 
+// Types for schema response
+interface DatabaseColumn {
+  column_name: string;
+  data_type: string;
+  is_nullable: string;
+  column_default: string | null;
+}
+
+interface DatabaseTable {
+  table_name: string;
+  table_schema: string;
+  columns: DatabaseColumn[];
+}
+
+interface SchemaRow {
+  table_name: string;
+  table_schema: string;
+  column_name: string;
+  data_type: string;
+  is_nullable: string;
+  column_default: string | null;
+}
+
 // Function to get database schema from external API
 async function getDatabaseSchema(): Promise<string> {
+
   try {
-    // You can either hardcode the schema or fetch it from your API
-    // For now, I'll provide a basic schema - you can update this based on your actual database
-    const schemaDescription = `Database Schema:
 
-Table: products
-Columns:
-  - id: integer (not null)
-  - name: varchar (not null)
-  - price: decimal (nullable)
-  - category: varchar (nullable)
-  - created_at: timestamp (nullable)
+    const result = await getSchemaAPI();
 
-Table: customers
-Columns:
-  - id: integer (not null)
-  - name: varchar (not null)
-  - email: varchar (nullable)
-  - phone: varchar (nullable)
-  - created_at: timestamp (nullable)
+    // Group by table
+    const tables: Record<string, DatabaseTable> = {};
+    result.rows.forEach((row: Record<string, unknown>) => {
+      const schemaRow = row as unknown as SchemaRow;
+      const key = `${schemaRow.table_schema}.${schemaRow.table_name}`;
+      if (!tables[key]) {
+        tables[key] = {
+          table_name: schemaRow.table_name,
+          table_schema: schemaRow.table_schema,
+          columns: []
+        };
+      }
+      tables[key].columns.push({
+        column_name: schemaRow.column_name,
+        data_type: schemaRow.data_type,
+        is_nullable: schemaRow.is_nullable,
+        column_default: schemaRow.column_default
+      });
+    });
 
-Table: orders
-Columns:
-  - id: integer (not null)
-  - customer_id: integer (not null)
-  - product_id: integer (not null)
-  - quantity: integer (not null)
-  - total_amount: decimal (not null)
-  - order_date: timestamp (nullable)
-
-`;
+    // Format schema for AI
+    let schemaDescription = "Database Schema:\n\n";
+    Object.values(tables).forEach((table: DatabaseTable) => {
+      const fullTableName = table.table_schema === 'public' ? table.table_name : `${table.table_schema}.${table.table_name}`;
+      schemaDescription += `Table: ${fullTableName}\n`;
+      schemaDescription += "Columns:\n";
+      table.columns.forEach((col: DatabaseColumn) => {
+        const nullable = col.is_nullable === 'YES' ? ' (nullable)' : ' (not null)';
+        const defaultVal = col.column_default ? ` default: ${col.column_default}` : '';
+        schemaDescription += `  - ${col.column_name}: ${col.data_type}${nullable}${defaultVal}\n`;
+      });
+      schemaDescription += "\n";
+    });
 
     return schemaDescription;
   } catch (error) {
@@ -48,6 +78,7 @@ Columns:
     return "Database schema not available";
   }
 }
+
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -119,6 +150,28 @@ Guidelines:
   } catch (error) {
     console.error('Error in chat API:', error);
     return new Response('Error processing request', { status: 500 });
+  }
+}
+
+const getSchemaAPI = async ()=>{
+  try {
+    const response = await fetch("http://localhost:8080/schema", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data: ApiResponse = await response.json();
+    return data;
+
+  } catch (error) {
+    console.error('Error fetching schema from API:', error);
+    throw error;
   }
 }
 
